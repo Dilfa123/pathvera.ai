@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { flushSync } from 'react-dom';
 import { gsap } from 'gsap';
@@ -16,6 +17,7 @@ export default function OnboardingFlow({ onCompleteOnboarding }) {
     compensation: false,
   });
   const [isFinalized, setIsFinalized] = useState(false);
+
 
   // States to keep the DOM rendering matching the animation sequence
   const [renderedStep, setRenderedStep] = useState(1);
@@ -49,6 +51,7 @@ export default function OnboardingFlow({ onCompleteOnboarding }) {
     { key: 'network', label: '🤝 Industry Elite Network Access', desc: 'Vetted introduction channels to advisors, founders, and investors.' },
     { key: 'compensation', label: '📈 Compensation Arbitrage System', desc: 'Real-time equity and base structure intelligence.' }
   ];
+
 
   // GSAP animation refs
   const stepContentRef = useRef(null);
@@ -234,6 +237,7 @@ export default function OnboardingFlow({ onCompleteOnboarding }) {
       ease: 'power3.inOut'
     });
   };
+
 
   const handleRoleSelect = (role) => {
     setSelectedRole(role);

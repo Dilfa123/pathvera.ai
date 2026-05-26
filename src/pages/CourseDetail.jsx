@@ -1,5 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Sidebar from '../components/Sidebar';
+
+gsap.registerPlugin(ScrollTrigger);
 
 export default function CourseDetail({ 
   currentView, 
@@ -9,6 +13,19 @@ export default function CourseDetail({
   onToggleSaveCourse 
 }) {
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'curriculum' | 'requirements' | 'outcomes'
+  const mainRef = useRef(null);
+  const scrollContainerRef = useRef(null);
+  const heroParallaxRef = useRef(null);
+  const heroOverlayRef = useRef(null);
+  const titleRef = useRef(null);
+  const breadcrumbRef = useRef(null);
+  const statsStripRef = useRef(null);
+  const ctaBarRef = useRef(null);
+  const contentAreaRef = useRef(null);
+  const bookmarkIconRef = useRef(null);
+
+  const statTuitionRef = useRef(null);
+  const statSuccessRef = useRef(null);
 
   // Fallback default course data if none is selected
   const course = selectedCourse || {
@@ -31,8 +48,133 @@ export default function CourseDetail({
     { id: 'outcomes', name: 'Outcomes' }
   ];
 
+  useEffect(() => {
+    let ctx = gsap.context(() => {
+      // 1. Page Entrance Waterfall
+      const tl = gsap.timeline();
+      tl.fromTo(heroParallaxRef.current, { opacity: 0, scale: 1.04 }, { opacity: 1, scale: 1, duration: 0.8, ease: 'power3.out' })
+        .fromTo(titleRef.current, { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, ease: 'power3.out' }, '-=0.4')
+        .fromTo(breadcrumbRef.current, { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: 'power3.out' }, '-=0.5');
+
+      // 2. Parallax Hero
+      gsap.to(heroParallaxRef.current, {
+        y: '25%',
+        ease: 'none',
+        scrollTrigger: {
+          trigger: '.hero-section',
+          scroller: scrollContainerRef.current,
+          start: 'top top',
+          end: 'bottom top',
+          scrub: true
+        }
+      });
+
+      // Scrub hero overlay
+      gsap.fromTo(heroOverlayRef.current, { opacity: 0.4 }, {
+        opacity: 0.7,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: '.hero-section',
+          scroller: scrollContainerRef.current,
+          start: 'top top',
+          end: 'bottom top',
+          scrub: true
+        }
+      });
+
+      // 3. Stats Strip Entrance & Numbers
+      gsap.fromTo(statsStripRef.current.children, { y: 20, opacity: 0 }, {
+        y: 0, opacity: 1, duration: 0.6, stagger: 0.1, ease: 'power2.out',
+        scrollTrigger: {
+          trigger: statsStripRef.current,
+          scroller: scrollContainerRef.current,
+          start: 'top 90%'
+        }
+      });
+
+      const tuitionObj = { val: 0 };
+      gsap.to(tuitionObj, {
+        val: 54200,
+        duration: 1.5,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: statsStripRef.current,
+          scroller: scrollContainerRef.current,
+          start: 'top 90%'
+        },
+        onUpdate: () => {
+          if (statTuitionRef.current) {
+            statTuitionRef.current.innerText = '$' + Math.floor(tuitionObj.val).toLocaleString();
+          }
+        }
+      });
+
+      const successObj = { val: 0 };
+      gsap.to(successObj, {
+        val: 98.4,
+        duration: 1.5,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: statsStripRef.current,
+          scroller: scrollContainerRef.current,
+          start: 'top 90%'
+        },
+        onUpdate: () => {
+          if (statSuccessRef.current) {
+            statSuccessRef.current.innerText = successObj.val.toFixed(1) + '%';
+          }
+        }
+      });
+
+      // 4. Sticky CTA Bar
+      gsap.set(ctaBarRef.current, { y: 80, opacity: 0 });
+      gsap.to(ctaBarRef.current, {
+        y: 0, opacity: 1, duration: 0.5, ease: 'power3.out',
+        scrollTrigger: {
+          trigger: statsStripRef.current,
+          scroller: scrollContainerRef.current,
+          start: 'bottom top',
+          toggleActions: 'play none none reverse'
+        }
+      });
+
+    }, mainRef);
+
+    return () => ctx.revert();
+  }, []);
+
+  useEffect(() => {
+    let ctx = gsap.context(() => {
+      if (contentAreaRef.current) {
+        const blocks = Array.from(contentAreaRef.current.children);
+        gsap.fromTo(blocks, { y: 45, opacity: 0 }, {
+          y: 0, opacity: 1, duration: 0.8, ease: 'power3.out', stagger: 0.1,
+          scrollTrigger: {
+            trigger: contentAreaRef.current,
+            scroller: scrollContainerRef.current,
+            start: 'top 85%'
+          }
+        });
+      }
+    }, mainRef);
+    return () => ctx.revert();
+  }, [activeTab]);
+
+  const handleSaveToggle = (e) => {
+    e.preventDefault();
+    if (bookmarkIconRef.current) {
+      const tl = gsap.timeline();
+      tl.to(bookmarkIconRef.current, { scale: 0.7, duration: 0.15, ease: 'power2.in' })
+        .call(() => onToggleSaveCourse(course.id))
+        .to(bookmarkIconRef.current, { scale: 1.2, duration: 0.2, ease: 'back.out(2)' })
+        .to(bookmarkIconRef.current, { scale: 1, duration: 0.15, ease: 'power2.out' });
+    } else {
+      onToggleSaveCourse(course.id);
+    }
+  };
+
   return (
-    <div className="detail-page-wrapper">
+    <div className="detail-page-wrapper" ref={mainRef}>
       <style dangerouslySetInnerHTML={{ __html: `
         .detail-page-wrapper {
           --bg: #070D1A;
@@ -67,9 +209,9 @@ export default function CourseDetail({
           height: 100vh;
         }
 
-        /* Hero Section */
+        /* Hero Section Parallax */
         .hero-section {
-          height: 260px;
+          height: 340px;
           width: 100%;
           position: relative;
           display: flex;
@@ -77,9 +219,19 @@ export default function CourseDetail({
           justify-content: flex-end;
           padding: 32px;
           box-sizing: border-box;
-          overflow: hidden;
-          background: linear-gradient(to bottom, rgba(7, 13, 26, 0.3) 0%, rgba(7, 13, 26, 0.95) 100%), 
-                      linear-gradient(135deg, #0e1e38 0%, #070D1A 100%);
+          overflow: hidden; /* For parallax bounds */
+        }
+
+        .hero-bg-parallax {
+          position: absolute;
+          top: -20%;
+          left: 0;
+          right: 0;
+          bottom: -20%;
+          background: linear-gradient(135deg, #0e1e38 0%, #070D1A 100%);
+          background-size: cover;
+          background-position: center;
+          z-index: 0;
         }
 
         .hero-bg-overlay {
@@ -88,7 +240,8 @@ export default function CourseDetail({
           left: 0;
           right: 0;
           bottom: 0;
-          background: radial-gradient(circle at 80% 20%, rgba(255, 209, 102, 0.05) 0%, transparent 60%);
+          background: linear-gradient(to bottom, rgba(7, 13, 26, 0.1) 0%, rgba(7, 13, 26, 1) 100%);
+          z-index: 1;
           pointer-events: none;
         }
 
@@ -96,7 +249,8 @@ export default function CourseDetail({
           font-size: 11px;
           color: var(--muted);
           margin-bottom: 16px;
-          z-index: 1;
+          z-index: 2;
+          position: relative;
         }
 
         .breadcrumb-link {
@@ -122,18 +276,20 @@ export default function CourseDetail({
           margin-bottom: 12px;
           width: fit-content;
           letter-spacing: 0.03em;
-          z-index: 1;
+          z-index: 2;
+          position: relative;
         }
 
         .program-title {
           font-family: 'Cormorant Garamond', serif;
-          font-size: 36px;
+          font-size: 42px;
           font-weight: 700;
           color: var(--text);
           margin: 0;
           max-width: 600px;
-          line-height: 1.2;
-          z-index: 1;
+          line-height: 1.1;
+          z-index: 2;
+          position: relative;
         }
 
         .alumni-row {
@@ -143,7 +299,7 @@ export default function CourseDetail({
           display: flex;
           align-items: center;
           gap: 10px;
-          z-index: 1;
+          z-index: 2;
         }
 
         .avatar-group {
@@ -187,6 +343,8 @@ export default function CourseDetail({
           align-items: center;
           box-sizing: border-box;
           backdrop-filter: blur(8px);
+          z-index: 2;
+          position: relative;
         }
 
         .stat-item {
@@ -271,13 +429,7 @@ export default function CourseDetail({
           display: flex;
           gap: 32px;
           box-sizing: border-box;
-          padding-bottom: 100px; /* prevent sticky footer overlapping content */
-          animation: fade-in 0.4s ease-out;
-        }
-
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(8px); }
-          to { opacity: 1; transform: translateY(0); }
+          padding-bottom: 100px;
         }
 
         .left-content-column {
@@ -449,7 +601,7 @@ export default function CourseDetail({
         .sticky-footer {
           position: fixed;
           bottom: 0;
-          left: 250px; /* offset sidebar width */
+          left: 250px;
           right: 0;
           background-color: var(--surface);
           border-top: 1px solid var(--border);
@@ -628,12 +780,13 @@ export default function CourseDetail({
       <Sidebar currentView="explore" onViewChange={onViewChange} />
 
       {/* Main Detail Area */}
-      <div className="detail-content">
+      <div className="detail-content" ref={scrollContainerRef}>
         <div className="hero-section">
-          <div className="hero-bg-overlay" />
+          <div className="hero-bg-parallax" style={{ backgroundImage: course.gradient }} ref={heroParallaxRef} />
+          <div className="hero-bg-overlay" ref={heroOverlayRef} />
           
           {/* Breadcrumbs */}
-          <div className="breadcrumb-row">
+          <div className="breadcrumb-row" ref={breadcrumbRef}>
             <span className="breadcrumb-link" onClick={() => onViewChange('explore')}>Explore</span>
             {' › '}
             <span className="breadcrumb-link" onClick={() => onViewChange('explore')}>
@@ -645,7 +798,7 @@ export default function CourseDetail({
 
           {/* Badge & Title */}
           <span className="univ-badge">{course.institution}</span>
-          <h1 className="program-title">{course.title}</h1>
+          <h1 className="program-title" ref={titleRef}>{course.title}</h1>
 
           {/* Alumni circles */}
           <div className="alumni-row">
@@ -660,7 +813,7 @@ export default function CourseDetail({
         </div>
 
         {/* 4 Stats Band strip */}
-        <div className="stats-strip">
+        <div className="stats-strip" ref={statsStripRef}>
           <div className="stat-item">
             <span className="stat-label">Duration</span>
             <div className="stat-value-row">
@@ -687,7 +840,7 @@ export default function CourseDetail({
                   <line x1="3" y1="10" x2="21" y2="10" />
                 </svg>
               </span>
-              <span>Sept 2024</span>
+              <span>Sept 2026</span>
             </div>
           </div>
 
@@ -702,7 +855,7 @@ export default function CourseDetail({
                   <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
                 </svg>
               </span>
-              <span style={{ color: 'var(--gold)' }}>$54,200</span>
+              <span style={{ color: 'var(--gold)' }} ref={statTuitionRef}>$54,200</span>
             </div>
           </div>
 
@@ -717,7 +870,7 @@ export default function CourseDetail({
                   <polyline points="22 4 12 14.01 9 11.01" />
                 </svg>
               </span>
-              <span style={{ color: 'var(--gold)' }}>98.4%</span>
+              <span style={{ color: 'var(--gold)' }} ref={statSuccessRef}>98.4%</span>
             </div>
           </div>
         </div>
@@ -747,7 +900,7 @@ export default function CourseDetail({
         </div>
 
         {/* Tab Content Panels */}
-        <div className="tab-content-area">
+        <div className="tab-content-area" ref={contentAreaRef}>
           <div className="left-content-column">
             {activeTab === 'overview' && (
               <div>
@@ -854,7 +1007,7 @@ export default function CourseDetail({
                     stroke="var(--gold)" 
                     strokeWidth="5"
                     strokeDasharray="238.7"
-                    strokeDashoffset="23.87" /* 90% progress, 238.7 * 0.1 */
+                    strokeDashoffset="23.87"
                     strokeLinecap="round"
                     transform="rotate(-90 50 50)"
                     style={{ transition: 'stroke-dashoffset 0.6s ease' }}
@@ -872,7 +1025,7 @@ export default function CourseDetail({
         </div>
 
         {/* Sticky bottom bar */}
-        <div className="sticky-footer">
+        <div className="sticky-footer" ref={ctaBarRef}>
           <div className="footer-left-info">
             <div className="footer-price-row">
               <span className="price-label">Annual Tuition:</span>
@@ -888,9 +1041,9 @@ export default function CourseDetail({
             
             <button 
               className={`btn-footer-save ${isSaved ? 'saved' : ''}`}
-              onClick={() => onToggleSaveCourse(course.id)}
+              onClick={handleSaveToggle}
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill={isSaved ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill={isSaved ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" ref={bookmarkIconRef}>
                 <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
               </svg>
               {isSaved ? 'Program Saved' : 'Save Program'}

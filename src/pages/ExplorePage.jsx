@@ -1,5 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Sidebar from '../components/Sidebar';
+
+gsap.registerPlugin(ScrollTrigger);
 
 export default function ExplorePage({ 
   currentView, 
@@ -11,6 +15,13 @@ export default function ExplorePage({
   const [activeTab, setActiveTab] = useState('courses'); // 'courses' | 'consultancies'
   const [activeFilter, setActiveFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const mainRef = useRef(null);
+  const headingRef = useRef(null);
+  const filterNavRef = useRef(null);
+  const tabIndicatorRef = useRef(null);
+  const cardsGridRef = useRef(null);
+  const searchInputRef = useRef(null);
 
   const coursesMock = [
     {
@@ -117,8 +128,107 @@ export default function ExplorePage({
     return matchesFilter && matchesSearch;
   });
 
+  // INITIAL MOUNT ANIMATIONS
+  useEffect(() => {
+    let ctx = gsap.context(() => {
+      // Heading Entrance
+      setTimeout(() => {
+        gsap.fromTo(headingRef.current, 
+          { y: 50, opacity: 0 }, 
+          { 
+            y: 0, opacity: 1, duration: 1, ease: 'power3.out',
+            scrollTrigger: { 
+              trigger: headingRef.current, 
+              start: 'top 85%', 
+              toggleActions: 'play none none reverse' 
+            } 
+          }
+        );
+        ScrollTrigger.refresh();
+      }, 500);
+
+      // Filter/Tab Bar Entrance
+      gsap.fromTo(filterNavRef.current,
+        { y: -30, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.7, ease: 'power3.out', delay: 0.3 }
+      );
+    }, mainRef);
+
+    return () => ctx.revert();
+  }, []);
+
+  // TAB SLIDER ANIMATION
+  useEffect(() => {
+    let ctx = gsap.context(() => {
+      const isConsultancies = activeTab === 'consultancies';
+      gsap.to(tabIndicatorRef.current, {
+        x: isConsultancies ? 92 : 0,
+        width: isConsultancies ? 102 : 60,
+        duration: 0.35,
+        ease: 'power2.inOut'
+      });
+    }, mainRef);
+    return () => ctx.revert();
+  }, [activeTab]);
+
+  // CARD ENTRANCE & SCROLL TRIGGERS (Re-run when filteredItems change)
+  useEffect(() => {
+    let ctx = gsap.context(() => {
+      if (!cardsGridRef.current) return;
+      const cards = Array.from(cardsGridRef.current.querySelectorAll('.explore-card'));
+      
+      cards.forEach((card, i) => {
+        gsap.fromTo(card,
+          { x: -160, opacity: 0, rotate: -3 },
+          { 
+            x: 0, opacity: 1, rotate: 0, 
+            duration: 0.9, 
+            ease: 'power4.out', 
+            delay: i * 0.08, // Re-entering cards stagger in with 80ms delay
+            scrollTrigger: {
+              trigger: card,
+              start: 'top 90%',
+              toggleActions: 'play none none none'
+            }
+          }
+        );
+
+        // Hover events for the card
+        const cardImg = card.querySelector('.card-image-decorative-circle');
+        
+        card.addEventListener('mouseenter', () => {
+          gsap.to(card, { y: -6, duration: 0.3, ease: 'power2.out' });
+          if(cardImg) gsap.to(cardImg, { scale: 1.06, duration: 0.3, ease: 'power2.out' });
+        });
+        
+        card.addEventListener('mouseleave', () => {
+          gsap.to(card, { y: 0, duration: 0.3, ease: 'power2.out' });
+          if(cardImg) gsap.to(cardImg, { scale: 1, duration: 0.3, ease: 'power2.out' });
+        });
+      });
+    }, cardsGridRef);
+    
+    return () => ctx.revert();
+  }, [activeFilter, activeTab, searchQuery]);
+
+  const handleFilterClick = (e, filter) => {
+    setActiveFilter(filter);
+    const tl = gsap.timeline();
+    tl.to(e.currentTarget, { scale: 0.92, duration: 0.1 })
+      .to(e.currentTarget, { scale: 1.04, duration: 0.15, ease: 'power1.out' })
+      .to(e.currentTarget, { scale: 1, duration: 0.1, ease: 'power1.in' });
+  };
+
+  const handleSearchFocus = () => {
+    gsap.to(searchInputRef.current, { scaleX: 1.02, duration: 0.3, transformOrigin: 'left center', ease: 'power2.out' });
+  };
+
+  const handleSearchBlur = () => {
+    gsap.to(searchInputRef.current, { scaleX: 1, duration: 0.3, transformOrigin: 'left center', ease: 'power2.out' });
+  };
+
   return (
-    <div className="explore-page-wrapper">
+    <div className="explore-page-wrapper" ref={mainRef}>
       <style dangerouslySetInnerHTML={{ __html: `
         .explore-page-wrapper {
           --bg: #070D1A;
@@ -199,7 +309,7 @@ export default function ExplorePage({
           font-family: 'DM Sans', sans-serif;
           font-size: 13.5px;
           box-sizing: border-box;
-          transition: all 0.3s ease;
+          transition: border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
         }
 
         .search-input:focus {
@@ -216,6 +326,7 @@ export default function ExplorePage({
           transform: translateY(-50%);
           color: var(--muted);
           pointer-events: none;
+          z-index: 2;
         }
 
         /* Sliding tab bar */
@@ -255,14 +366,7 @@ export default function ExplorePage({
           height: 2px;
           background-color: var(--gold);
           width: 60px;
-          transform: translateX(0);
-          transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           box-shadow: 0 0 10px rgba(255, 209, 102, 0.4);
-        }
-
-        .tab-sliding-underline.shift-right {
-          transform: translateX(92px);
-          width: 102px;
         }
 
         /* Filter Pills list with horizontal scrolling */
@@ -284,8 +388,8 @@ export default function ExplorePage({
           cursor: pointer;
           font-family: 'DM Sans', sans-serif;
           font-size: 12px;
-          transition: all 0.25s ease;
           box-sizing: border-box;
+          transform-origin: center;
         }
 
         .filter-pill.active {
@@ -303,6 +407,7 @@ export default function ExplorePage({
           color: var(--muted);
           border-radius: 20px;
           padding: 6px 16px;
+          transition: border-color 0.25s ease, color 0.25s ease;
         }
 
         .filter-pill.inactive:hover {
@@ -328,11 +433,10 @@ export default function ExplorePage({
           display: flex;
           flex-direction: column;
           position: relative;
-          transition: transform 300ms ease, border-color 300ms ease, box-shadow 300ms ease;
+          transition: border-color 300ms ease, box-shadow 300ms ease;
         }
 
         .explore-card:hover {
-          transform: translateY(-4px);
           border-color: var(--gold);
           box-shadow: var(--glow-gold);
         }
@@ -523,7 +627,7 @@ export default function ExplorePage({
 
       {/* Main Explore Content Area */}
       <div className="explore-content">
-        <div className="explore-header-row">
+        <div className="explore-header-row" ref={headingRef}>
           <div className="explore-title-box">
             <h1 className="explore-title">Explore</h1>
             <p className="explore-subtext">
@@ -541,12 +645,15 @@ export default function ExplorePage({
               placeholder="Search elite pathways..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={handleSearchFocus}
+              onBlur={handleSearchBlur}
+              ref={searchInputRef}
             />
           </div>
         </div>
 
         {/* Tab switcher navigation bar */}
-        <div className="tab-nav-container">
+        <div className="tab-nav-container" ref={filterNavRef}>
           <div className="tabs-row">
             <button 
               className={`tab-btn ${activeTab === 'courses' ? 'active' : ''}`}
@@ -567,7 +674,7 @@ export default function ExplorePage({
               Consultancies
             </button>
           </div>
-          <div className={`tab-sliding-underline ${activeTab === 'consultancies' ? 'shift-right' : ''}`} />
+          <div className="tab-sliding-underline" ref={tabIndicatorRef} />
         </div>
 
         {/* Categories filters scroll list */}
@@ -576,7 +683,7 @@ export default function ExplorePage({
             <button
               key={filter}
               className={`filter-pill ${activeFilter === filter ? 'active' : 'inactive'}`}
-              onClick={() => setActiveFilter(filter)}
+              onClick={(e) => handleFilterClick(e, filter)}
             >
               {filter}
             </button>
@@ -584,7 +691,7 @@ export default function ExplorePage({
         </div>
 
         {/* Grid display cards */}
-        <div className="cards-grid">
+        <div className="cards-grid" ref={cardsGridRef}>
           {filteredItems.map((item) => {
             const isSaved = savedCourses.includes(item.id);
             return (
