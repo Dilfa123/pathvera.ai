@@ -44,6 +44,8 @@ export default function Sidebar({ currentView, onViewChange }) {
           --text: #F0F4FF;
           --muted: #6B84A3;
           --border: rgba(100, 160, 255, 0.10);
+          --bg: #070D1A;
+          --blue-accent: #4A9EFF;
           
           width: 250px;
           height: 100vh;
@@ -68,28 +70,45 @@ export default function Sidebar({ currentView, onViewChange }) {
         .sidebar-logo {
           font-family: 'Cormorant Garamond', serif;
           font-size: 20px;
-          font-weight: 700;
-          color: var(--gold);
-          text-shadow: 0 0 10px rgba(255, 209, 102, 0.15);
-          letter-spacing: 0.05em;
+          font-weight: 300;
+          color: var(--text);
+          letter-spacing: 0.12em;
           margin: 0;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .sidebar-logo-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background-color: var(--gold);
+          box-shadow: 0 0 12px rgba(255,209,102,0.6), 0 0 24px rgba(255,209,102,0.3);
+          display: inline-block;
+          animation: dot-glow 2.5s infinite ease-in-out;
+        }
+
+        @keyframes dot-glow {
+          0%, 100% { box-shadow: 0 0 8px rgba(255,209,102,0.5); }
+          50% { box-shadow: 0 0 18px rgba(255,209,102,0.8), 0 0 30px rgba(255,209,102,0.4); }
         }
 
         .sidebar-tagline {
-          font-family: 'DM Sans', sans-serif;
+          font-family: monospace;
           font-size: 8px;
           font-weight: 700;
-          color: var(--muted);
-          letter-spacing: 0.2em;
+          color: var(--gold);
+          letter-spacing: 0.4em;
           text-transform: uppercase;
-          margin-top: 4px;
+          margin-top: 6px;
           margin-bottom: 0;
         }
 
         .sidebar-menu {
           display: flex;
           flex-direction: column;
-          gap: 8px;
+          gap: 4px;
           width: 100%;
         }
 
@@ -100,9 +119,9 @@ export default function Sidebar({ currentView, onViewChange }) {
           padding: 12px 16px;
           border-radius: 8px;
           color: var(--muted);
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Lato', sans-serif;
           font-size: 13.5px;
-          font-weight: 500;
+          font-weight: 400;
           text-decoration: none;
           cursor: pointer;
           transition: all 0.25s ease;
@@ -204,8 +223,9 @@ export default function Sidebar({ currentView, onViewChange }) {
         .mobile-logo {
           font-family: 'Cormorant Garamond', serif;
           font-size: 18px;
-          font-weight: 700;
-          color: var(--gold);
+          font-weight: 300;
+          color: var(--text);
+          letter-spacing: 0.1em;
         }
 
         @media (max-width: 768px) {
@@ -244,14 +264,17 @@ export default function Sidebar({ currentView, onViewChange }) {
             </svg>
           )}
         </button>
-        <span className="mobile-logo">Pathvera.ai</span>
-        <div style={{ width: 24 }}></div> {/* spacer */}
+        <span className="mobile-logo">Pathvera<span style={{ color: 'var(--gold)' }}>.</span>ai</span>
+        <div style={{ width: 24 }}></div>
       </div>
 
       {/* Main Sidebar */}
       <div className={`sidebar-container ${isOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
-          <h2 className="sidebar-logo">Pathvera.ai</h2>
+          <h2 className="sidebar-logo">
+            <span className="sidebar-logo-dot" />
+            Pathvera<span style={{ color: 'var(--gold)' }}>.</span>ai
+          </h2>
           <p className="sidebar-tagline">FUTURE-PROOF YOUR LEGACY</p>
         </div>
 
@@ -262,7 +285,7 @@ export default function Sidebar({ currentView, onViewChange }) {
               className={`sidebar-item ${currentView === item.id || (currentView === 'detail' && item.id === 'explore') ? 'active' : ''}`}
               onClick={() => {
                 onViewChange(item.id);
-                setIsOpen(false); // Close sidebar on mobile item click
+                setIsOpen(false);
               }}
             >
               <span className="sidebar-item-icon">{item.icon}</span>

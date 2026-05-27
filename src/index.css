@@ -1,11 +1,214 @@
+/* ── PATHVERA DESIGN SYSTEM ─────────────────────────────── */
+
+:root {
+  /* Original Colour Palette */
+  --bg:          #070D1A;
+  --surface:     #0C1829;
+  --card:        rgba(100, 160, 255, 0.04);
+  --gold:        #FFD166;
+  --gold-dim:    rgba(255, 209, 102, 0.12);
+  --blue-accent: #4A9EFF;
+  --blue-dim:    rgba(74, 158, 255, 0.10);
+  --text:        #F0F4FF;
+  --muted:       #6B84A3;
+  --border:      rgba(100, 160, 255, 0.10);
+  --glow-gold:   0 0 32px rgba(255,209,102,0.20);
+  --glow-blue:   0 0 32px rgba(74,158,255,0.15);
+
+  /* Typography */
+  --font-display: 'Cormorant Garamond', serif;
+  --font-impact:  'Bebas Neue', sans-serif;
+  --font-body:    'Lato', sans-serif;
+  --font-mono:    'SF Mono', 'Fira Code', monospace;
+}
+
+/* ── GLOBAL RESET ───────────────────────────────────────── */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   padding: 0;
-  background-color: #070D1A;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-weight: 300;
+  line-height: 1.85;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #root {
   min-height: 100vh;
   width: 100%;
+}
+
+/* ── SVG GRAIN OVERLAY ──────────────────────────────────── */
+
+.grain-section {
+  position: relative;
+}
+
+.grain-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+}
+
+/* ── SECTION DIVIDER RULE ───────────────────────────────── */
+
+.section-rule {
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--gold) 50%, transparent 100%);
+  margin: 0;
+}
+
+/* ── SECTION EYEBROW ────────────────────────────────────── */
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 0.45em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.eyebrow::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--gold), transparent);
+}
+
+/* ── CTA BUTTONS ────────────────────────────────────────── */
+
+.btn-primary {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 14px 32px;
+  background-color: var(--gold);
+  color: var(--bg);
+  border: none;
+  cursor: pointer;
+  clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-primary:hover {
+  background-color: #ffe08a;
+  box-shadow: var(--glow-gold);
+}
+
+.btn-primary:active {
+  transform: scale(0.97);
+}
+
+.btn-primary:disabled {
+  background-color: var(--border);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+/* Ghost / outline button */
+.btn-ghost {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 12px 28px;
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: border-color 0.3s ease, color 0.3s ease;
+}
+
+.btn-ghost:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+/* Text CTA with animated underline */
+.text-cta {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gold);
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 4px 0;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
+}
+
+.text-cta::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 1px;
+  width: 0%;
+  background-color: var(--gold);
+  transition: width 0.35s ease;
+}
+
+.text-cta:hover::after {
+  width: 100%;
+}
+
+.text-cta svg {
+  transition: transform 0.25s ease;
+}
+
+.text-cta:hover svg {
+  transform: translateX(4px);
+}
+
+/* ── SCROLLBAR ──────────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255,209,102,0.2);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,209,102,0.35);
+}
+
+/* ── SELECTION ──────────────────────────────────────────── */
+
+::selection {
+  background: rgba(74,158,255,0.3);
+  color: var(--text);
 }
