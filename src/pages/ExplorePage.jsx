@@ -10,7 +10,10 @@ export default function ExplorePage({
   onViewChange, 
   savedCourses = [], 
   onToggleSaveCourse,
-  onSelectCourse 
+  onSelectCourse,
+  isAuthenticated,
+  onNavigateToAuth,
+  onLogout
 }) {
   const [activeTab, setActiveTab] = useState('courses');
   const [activeFilter, setActiveFilter] = useState('All');
@@ -315,7 +318,7 @@ export default function ExplorePage({
         }
       `}} />
 
-      <Sidebar currentView="explore" onViewChange={onViewChange} />
+      <Sidebar currentView="explore" onViewChange={onViewChange} isAuthenticated={isAuthenticated} onNavigateToAuth={onNavigateToAuth} onLogout={onLogout} />
 
       <div className="explore-content">
         <div className="explore-header-row" ref={headingRef}>

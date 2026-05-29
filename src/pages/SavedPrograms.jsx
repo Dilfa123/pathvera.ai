@@ -12,7 +12,9 @@ export default function SavedPrograms({
   onToggleSaveCourse,
   onSelectCourse,
   portfolioDocs = [],
-  onAddPortfolioDoc
+  onAddPortfolioDoc,
+  isAuthenticated,
+  onLogout
 }) {
   const [activeFilter, setActiveFilter] = useState('All');
   const fileInputRef = useRef(null);
@@ -965,7 +967,7 @@ export default function SavedPrograms({
       `}} />
 
       {/* Shared Sidebar layout */}
-      <Sidebar currentView="saved" onViewChange={onViewChange} />
+      <Sidebar currentView="saved" onViewChange={onViewChange} isAuthenticated={isAuthenticated} onLogout={onLogout} />
 
       {/* Main Saved Content */}
       <div className="saved-content">

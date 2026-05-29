@@ -10,7 +10,10 @@ export default function CourseDetail({
   onViewChange, 
   selectedCourse, 
   savedCourses = [], 
-  onToggleSaveCourse 
+  onToggleSaveCourse,
+  isAuthenticated,
+  onNavigateToAuth,
+  onLogout
 }) {
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'curriculum' | 'requirements' | 'outcomes'
   const mainRef = useRef(null);
@@ -777,7 +780,7 @@ export default function CourseDetail({
       `}} />
 
       {/* Reusable navigation Sidebar */}
-      <Sidebar currentView="explore" onViewChange={onViewChange} />
+      <Sidebar currentView="explore" onViewChange={onViewChange} isAuthenticated={isAuthenticated} onNavigateToAuth={onNavigateToAuth} onLogout={onLogout} />
 
       {/* Main Detail Area */}
       <div className="detail-content" ref={scrollContainerRef}>

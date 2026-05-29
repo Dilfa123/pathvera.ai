@@ -6,7 +6,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(ScrollTrigger);
 
-export default function OnboardingFlow({ onCompleteOnboarding }) {
+export default function OnboardingFlow({ onCompleteOnboarding, isAuthenticated, onNavigateToAuth, onLogout }) {
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedRole, setSelectedRole] = useState(null);
   const [selectedObjective, setSelectedObjective] = useState(null);
@@ -504,23 +504,65 @@ export default function OnboardingFlow({ onCompleteOnboarding }) {
       <div className="header-section" style={{ position: 'relative', width: '100%', maxWidth: '800px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <h1 className="logo-title">Pathvera<span className="logo-dot" />ai</h1>
         <p className="logo-subtitle">FUTURE-PROOF YOUR LEGACY</p>
-        {onCompleteOnboarding && (
-          <button 
-            onClick={onCompleteOnboarding}
-            style={{
-              position: 'absolute', right: '12px', top: '10px',
-              background: 'none', border: '1px solid var(--border)',
-              borderRadius: '20px', padding: '6px 14px', color: 'var(--muted)',
-              fontSize: '11px', fontFamily: 'Lato, sans-serif', cursor: 'pointer',
-              transition: 'all 0.2s ease', zIndex: 10
-            }}
-            className="skip-btn"
-            onMouseEnter={(e) => { e.target.style.color = 'var(--gold)'; e.target.style.borderColor = 'var(--gold)'; }}
-            onMouseLeave={(e) => { e.target.style.color = 'var(--muted)'; e.target.style.borderColor = 'var(--border)'; }}
-          >
-            Skip to Explore →
-          </button>
-        )}
+        <div style={{ position: 'absolute', right: '12px', top: '10px', display: 'flex', gap: '10px', zIndex: 10 }}>
+          {/* Sign In / Authenticated badge */}
+          {!isAuthenticated ? (
+            <button 
+              onClick={onNavigateToAuth}
+              style={{
+                background: 'linear-gradient(135deg, rgba(255,209,102,0.12), rgba(255,209,102,0.04))',
+                border: '1px solid var(--gold)',
+                borderRadius: '20px', padding: '6px 16px', color: 'var(--gold)',
+                fontSize: '11px', fontFamily: 'Lato, sans-serif', cursor: 'pointer',
+                transition: 'all 0.2s ease', fontWeight: 600,
+                display: 'flex', alignItems: 'center', gap: '6px'
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 0 16px rgba(255,209,102,0.2)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="8" r="5" /><path d="M20 21a8 8 0 0 0-16 0" />
+              </svg>
+              Sign In
+            </button>
+          ) : (
+            <button 
+              onClick={onLogout}
+              style={{
+                background: 'linear-gradient(135deg, rgba(231,76,111,0.12), rgba(231,76,111,0.04))',
+                border: '1px solid #E74C6F',
+                borderRadius: '20px', padding: '6px 16px', color: '#E74C6F',
+                fontSize: '11px', fontFamily: 'Lato, sans-serif', cursor: 'pointer',
+                transition: 'all 0.2s ease', fontWeight: 600,
+                display: 'flex', alignItems: 'center', gap: '6px'
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 0 16px rgba(231,76,111,0.2)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+              Logout
+            </button>
+          )}
+          {/* Skip button */}
+          {onCompleteOnboarding && (
+            <button 
+              onClick={onCompleteOnboarding}
+              style={{
+                background: 'none', border: '1px solid var(--border)',
+                borderRadius: '20px', padding: '6px 14px', color: 'var(--muted)',
+                fontSize: '11px', fontFamily: 'Lato, sans-serif', cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+              className="skip-btn"
+              onMouseEnter={(e) => { e.target.style.color = 'var(--gold)'; e.target.style.borderColor = 'var(--gold)'; }}
+              onMouseLeave={(e) => { e.target.style.color = 'var(--muted)'; e.target.style.borderColor = 'var(--border)'; }}
+            >
+              Skip to Explore →
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="content-main">

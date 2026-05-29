@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import AuthPage from './pages/AuthPage';
 import OnboardingFlow from './pages/OnboardingFlow';
 import ExplorePage from './pages/ExplorePage';
 import CourseDetail from './pages/CourseDetail';
@@ -6,12 +7,47 @@ import SavedPrograms from './pages/SavedPrograms';
 
 function App() {
   const [currentView, setCurrentView] = useState('onboarding');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [previousView, setPreviousView] = useState('onboarding');
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [savedCourses, setSavedCourses] = useState([]);
   const [portfolioDocs, setPortfolioDocs] = useState([
     { id: 'doc-1', name: 'Executive_Trajectory_2026.pdf', updated: '2 hours ago' },
     { id: 'doc-2', name: 'Vera_Alignment_Matrix_v4.pdf', updated: '3 days ago' }
   ]);
+
+  // Guarded view change — redirect to auth if trying to access saved while unauthenticated
+  const handleViewChange = (view) => {
+    if (view === 'saved' && !isAuthenticated) {
+      setPreviousView(currentView);
+      setCurrentView('auth');
+      return;
+    }
+    setCurrentView(view);
+  };
+
+  const handleNavigateToAuth = () => {
+    setPreviousView(currentView);
+    setCurrentView('auth');
+  };
+
+  const handleAuthComplete = () => {
+    setIsAuthenticated(true);
+    // Go back to where the user came from, or to explore if coming from onboarding
+    const returnTo = previousView === 'auth' ? 'explore' : (previousView || 'explore');
+    setCurrentView(returnTo);
+  };
+
+  const handleAuthBack = () => {
+    setCurrentView(previousView || 'onboarding');
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    if (currentView === 'saved') {
+      setCurrentView('explore');
+    }
+  };
 
   const handleToggleSaveCourse = (id) => {
     setSavedCourses(prev => {
@@ -24,7 +60,6 @@ function App() {
   };
 
   const handleSelectCourse = (course) => {
-    // Standardize selected item for detail rendering (mappings between courses and saved lists)
     setSelectedCourse({
       id: course.id,
       title: course.title,
@@ -44,41 +79,59 @@ function App() {
 
   return (
     <>
+      {currentView === 'auth' && (
+        <AuthPage 
+          onAuthComplete={handleAuthComplete}
+          onBack={handleAuthBack}
+        />
+      )}
+
       {currentView === 'onboarding' && (
         <OnboardingFlow 
-          onCompleteOnboarding={() => setCurrentView('explore')} 
+          onCompleteOnboarding={() => setCurrentView('explore')}
+          isAuthenticated={isAuthenticated}
+          onNavigateToAuth={handleNavigateToAuth}
+          onLogout={handleLogout}
         />
       )}
       
       {currentView === 'explore' && (
         <ExplorePage 
           currentView={currentView}
-          onViewChange={setCurrentView}
+          onViewChange={handleViewChange}
           savedCourses={savedCourses}
           onToggleSaveCourse={handleToggleSaveCourse}
           onSelectCourse={handleSelectCourse}
+          isAuthenticated={isAuthenticated}
+          onNavigateToAuth={handleNavigateToAuth}
+          onLogout={handleLogout}
         />
       )}
 
       {currentView === 'detail' && (
         <CourseDetail 
           currentView={currentView}
-          onViewChange={setCurrentView}
+          onViewChange={handleViewChange}
           selectedCourse={selectedCourse}
           savedCourses={savedCourses}
           onToggleSaveCourse={handleToggleSaveCourse}
+          isAuthenticated={isAuthenticated}
+          onNavigateToAuth={handleNavigateToAuth}
+          onLogout={handleLogout}
         />
       )}
 
-      {currentView === 'saved' && (
+      {currentView === 'saved' && isAuthenticated && (
         <SavedPrograms 
           currentView={currentView}
-          onViewChange={setCurrentView}
+          onViewChange={handleViewChange}
           savedCourses={savedCourses}
           onToggleSaveCourse={handleToggleSaveCourse}
           onSelectCourse={handleSelectCourse}
           portfolioDocs={portfolioDocs}
           onAddPortfolioDoc={handleAddPortfolioDoc}
+          isAuthenticated={isAuthenticated}
+          onLogout={handleLogout}
         />
       )}
     </>
