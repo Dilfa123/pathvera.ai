@@ -4,6 +4,9 @@ import OnboardingFlow from './pages/OnboardingFlow';
 import ExplorePage from './pages/ExplorePage';
 import CourseDetail from './pages/CourseDetail';
 import SavedPrograms from './pages/SavedPrograms';
+import ResumeEvaluator from './pages/ResumeEvaluator';
+import JobMatches from './pages/JobMatches';
+import CVGapFiller from './pages/CVGapFiller';
 
 function App() {
   const [currentView, setCurrentView] = useState('onboarding');
@@ -11,9 +14,11 @@ function App() {
   const [previousView, setPreviousView] = useState('onboarding');
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [savedCourses, setSavedCourses] = useState([]);
+  const [userType, setUserType] = useState(null); // 'student' | 'fresher' | 'professional'
+  const [resumeData, setResumeData] = useState(null);
   const [portfolioDocs, setPortfolioDocs] = useState([
     { id: 'doc-1', name: 'Executive_Trajectory_2026.pdf', updated: '2 hours ago' },
-    { id: 'doc-2', name: 'Vera_Alignment_Matrix_v4.pdf', updated: '3 days ago' }
+    { id: 'doc-2', name: 'Vera_Alignment_Matrix_v4.pdf', updated: '3 days ago' },
   ]);
 
   // Guarded view change — redirect to auth if trying to access saved while unauthenticated
@@ -33,7 +38,6 @@ function App() {
 
   const handleAuthComplete = () => {
     setIsAuthenticated(true);
-    // Go back to where the user came from, or to explore if coming from onboarding
     const returnTo = previousView === 'auth' ? 'explore' : (previousView || 'explore');
     setCurrentView(returnTo);
   };
@@ -44,19 +48,46 @@ function App() {
 
   const handleLogout = () => {
     setIsAuthenticated(false);
-    if (currentView === 'saved') {
+    if (currentView === 'saved') setCurrentView('explore');
+  };
+
+  // ── Onboarding complete — branch by role ──
+  const handleCompleteOnboarding = (role) => {
+    setUserType(role);
+    if (role === 'student') {
+      // Students skip resume flow → go directly to explore
       setCurrentView('explore');
+    } else {
+      // Freshers and Professionals → resume upload flow
+      setCurrentView('resumeEval');
     }
   };
 
+  // ── Resume evaluated → job matches ──
+  const handleResumeComplete = (data) => {
+    setResumeData(data);
+    setCurrentView('jobMatches');
+  };
+
+  // ── Jobs viewed → CV gap filler ──
+  const handleJobMatchesComplete = () => {
+    setCurrentView('cvGapFiller');
+  };
+
+  // ── CV gap filler done → explore ──
+  const handleCVGapComplete = () => {
+    setCurrentView('explore');
+  };
+
+  // ── Skip straight to explore from any setup page ──
+  const handleSkipToExplore = () => {
+    setCurrentView('explore');
+  };
+
   const handleToggleSaveCourse = (id) => {
-    setSavedCourses(prev => {
-      if (prev.includes(id)) {
-        return prev.filter(cId => cId !== id);
-      } else {
-        return [...prev, id];
-      }
-    });
+    setSavedCourses(prev =>
+      prev.includes(id) ? prev.filter(cId => cId !== id) : [...prev, id]
+    );
   };
 
   const handleSelectCourse = (course) => {
@@ -68,7 +99,7 @@ function App() {
       duration: course.duration || course.dateDetail || '24 Months',
       level: course.level || 'Advanced',
       desc: course.desc,
-      gradient: course.gradient || 'linear-gradient(135deg, #0e1e38 0%, #070D1A 100%)'
+      gradient: course.gradient || 'linear-gradient(135deg, #0e1e38 0%, #070D1A 100%)',
     });
     setCurrentView('detail');
   };
@@ -80,23 +111,53 @@ function App() {
   return (
     <>
       {currentView === 'auth' && (
-        <AuthPage 
+        <AuthPage
           onAuthComplete={handleAuthComplete}
           onBack={handleAuthBack}
         />
       )}
 
       {currentView === 'onboarding' && (
-        <OnboardingFlow 
-          onCompleteOnboarding={() => setCurrentView('explore')}
+        <OnboardingFlow
+          onCompleteOnboarding={handleCompleteOnboarding}
           isAuthenticated={isAuthenticated}
           onNavigateToAuth={handleNavigateToAuth}
           onLogout={handleLogout}
         />
       )}
-      
+
+      {/* ── Job Seeker Flow (Fresher / Professional) ── */}
+
+      {currentView === 'resumeEval' && (
+        <ResumeEvaluator
+          userType={userType}
+          onComplete={handleResumeComplete}
+          onSkip={handleSkipToExplore}
+        />
+      )}
+
+      {currentView === 'jobMatches' && (
+        <JobMatches
+          userType={userType}
+          resumeData={resumeData}
+          onComplete={handleJobMatchesComplete}
+          onSkip={handleSkipToExplore}
+        />
+      )}
+
+      {currentView === 'cvGapFiller' && (
+        <CVGapFiller
+          userType={userType}
+          resumeData={resumeData}
+          onComplete={handleCVGapComplete}
+          onSkip={handleSkipToExplore}
+        />
+      )}
+
+      {/* ── Main App ── */}
+
       {currentView === 'explore' && (
-        <ExplorePage 
+        <ExplorePage
           currentView={currentView}
           onViewChange={handleViewChange}
           savedCourses={savedCourses}
@@ -109,7 +170,7 @@ function App() {
       )}
 
       {currentView === 'detail' && (
-        <CourseDetail 
+        <CourseDetail
           currentView={currentView}
           onViewChange={handleViewChange}
           selectedCourse={selectedCourse}
@@ -122,7 +183,7 @@ function App() {
       )}
 
       {currentView === 'saved' && isAuthenticated && (
-        <SavedPrograms 
+        <SavedPrograms
           currentView={currentView}
           onViewChange={handleViewChange}
           savedCourses={savedCourses}
